@@ -14,6 +14,15 @@ async def handle_websocket(request):
     # Add the new WebSocket connection to the list of connected clients
     connected_clients.add(ws)
 
+    # Set CORS headers for WebSocket connections
+    ws.headers['Access-Control-Allow-Origin'] = '*'
+    ws.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    ws.headers['Access-Control-Allow-Methods'] = 'OPTIONS, POST, GET, PUT, DELETE'
+    ws.headers['Access-Control-Allow-Credentials'] = 'true'
+
+    await ws.send_str('WebSocket connection established.')
+    await ws.send_str('You can now send messages through this WebSocket connection.')
+
     async for msg in ws:
         # Handle incoming WebSocket messages (if needed)
         pass
@@ -33,10 +42,15 @@ async def handle_root(request):
     # Serve the static HTML file at the root path
     return web.FileResponse('./index.html')
 
+async def handle_ext_page(request):
+    # Serve the static HTML file at the root path
+    return web.FileResponse('./ext.html')
+
 app = web.Application()
 app.router.add_get('/sendMessage', handle_send_message)
 app.router.add_get('/ws', handle_websocket)
 app.router.add_get('/', handle_root)
+app.router.add_get('/ext', handle_ext_page)
 
 connected_clients = set()
 

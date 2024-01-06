@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+<script>
+(() => {
+    'use strict';
+
+    const WS_PATH = 'ws://localhost:8080/ws';
+
+
+    // Replace 'your-server-ip' with the actual IP address or domain where your WebSocket server is running
+    const socket = new WebSocket(WS_PATH);
+
+    socket.addEventListener('open', (event) => {
+        console.log('WebSocket connection opened:', event);
+    });
+
+    socket.addEventListener('message', (event) => {
+
+        const data = event.data;
+
+        if (!data.startsWith('press_key:')) {
+            console.log('unknown data: ', data);
+        }
+
+        const keyCode = parseInt(event.data.split(':')[1]);
+
+        // Simulate key press using KeyboardEvent
+        const keyEvent = new KeyboardEvent('keydown', { keyCode });
+        document.dispatchEvent(keyEvent);
+
+        console.log('Key press simulated:', keyCode);
+    });
+
+    socket.addEventListener('close', (event) => {
+        console.log('WebSocket connection closed:', event);
+    });
+
+    socket.addEventListener('error', (event) => {
+        console.error('WebSocket error:', event);
+    });
+})();
+
+
+</script>
+
+</body>
+</html>

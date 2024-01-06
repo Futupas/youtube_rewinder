@@ -2,14 +2,108 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Control youtube</title>
+
+    <style>
+        * {
+            font-size: large;
+        }  
+
+
+        button {
+            background-color: white;
+            color: black;
+            padding: 5px;
+            display: block;
+            border: 2px solid black;
+            outline: none !important;
+            margin: 2px;
+        }
+        button:hover,
+        button:active {
+            
+            background-color: rgb(214, 214, 214);
+        }
+    </style>
 </head>
 <body>
 
-    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquam, totam.
+    <div></div>
+    <div>
+        <button onclick="sendKey(keyCodes.K)">Play / stop</button>
+        <button onclick="sendKey(keyCodes.ArrowUp)">Volume up</button>
+        <button onclick="sendKey(keyCodes.ArrowDown)">Volume down</button>
+        <button onclick="sendKey(keyCodes.M)">Mute / unmute</button>
+        <button onclick="sendKey(keyCodes.ArrowLeft)">Back 5s</button>
+        <button onclick="sendKey(keyCodes.J)">Back 10s</button>
+        <button onclick="sendKey(keyCodes.L)">Forward 5s</button>
+        <button onclick="sendKey(keyCodes.ArrowRight)">Forward 10s</button>
+    </div>
+    <div style="margin-top: 10px;">
+        <input type="number" value="60" step="5" min="-3600" max="3600" id="custom-rewind-input" />&nbsp;<span>s (<span id="minutes">1m</span>)</span>
+        <button id="rewind-btn">Rewind</button>
+    </div>
+
 
     <script>
         'use strict';
+        const SEND_URL = '/sendMessage?message=';
+
+        const keyCodes = {
+            F: 70,
+            J: 74,
+            K: 75,
+            L: 76,
+            M: 77,
+            ArrowUp: 38,
+            ArrowDown: 40,
+            ArrowLeft: 37,
+            ArrowRight: 39
+        };
+
+        if (localStorage['rewind_value']) {
+            document.getElementById('custom-rewind-input').value = +localStorage['rewind_value'];
+        } else {
+            document.getElementById('custom-rewind-input').value = 60;
+        }
+
+        async function sendKey(key) {
+            await fetch(SEND_URL + 'press_key:' + key);
+        }
+
+        document.getElementById('custom-rewind-input').oninput = e => {
+            const val = +document.getElementById('custom-rewind-input').value;
+            localStorage['rewind_value'] = val;
+            const sign = Math.sign(val);
+            const abs = Math.abs(val);
+            
+            const mins = Math.floor(abs / 60);
+            const secs = Math.floor(abs % 60);
+
+            const msg = sign === 0 ? '0' : (sign < 0 ? '<-' : '->') + (mins > 0 ? (mins + 'm') : '') + (secs > 0 ? (secs + 's') : '');
+            document.getElementById('minutes').innerText = msg;
+        }
+        document.getElementById('custom-rewind-input').oninput();
+
+        document.getElementById('rewind-btn').onclick = async e => {
+            const val = +document.getElementById('custom-rewind-input').value;
+            if (val === 0) return;
+
+            const sign = Math.sign(val);
+            const abs = Math.abs(val);
+
+            const smallSteps = Math.floor(abs / 5);
+            const bigSteps = Math.floor(abs / 10);
+            const smallStepNeeded = !!(smallSteps % 2);
+
+            for (let i = 0; i < bigSteps; i++) {
+                await sendKey(sign < 0 ? keyCodes.J : keyCodes.L);
+            }
+            if (smallStepNeeded) {
+                await sendKey(sign < 0 ? keyCodes.ArrowLeft : keyCodes.ArrowRight);
+            }
+        }
+
     </script>
 </body>
 </html>
